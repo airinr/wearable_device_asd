@@ -1,112 +1,153 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import {
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  MessageCircle,
+} from "lucide-react-native";
+import React, { useState } from "react";
+import {
+  LayoutAnimation,
+  Platform,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  UIManager,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
-
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
-      </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
-        </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
-        />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
-  );
+// Aktifkan animasi Layout untuk Android
+if (
+  Platform.OS === "android" &&
+  UIManager.setLayoutAnimationEnabledExperimental
+) {
+  UIManager.setLayoutAnimationEnabledExperimental(true);
 }
 
-const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+// 1. DATA FAQ (Disesuaikan dengan konteks AI)
+const faqData = [
+  {
+    id: 1,
+    question: "Apa arti status 'PANIK'?",
+    answer:
+      "Status ini muncul ketika Artificial Intelligence (AI) pada perangkat wearable mendeteksi pola fisik yang tidak wajar, seperti lonjakan detak jantung mendadak yang dikombinasikan dengan suhu atau gerakan tertentu, yang mengindikasikan anak sedang panik atau dalam bahaya.",
   },
-  titleContainer: {
-    flexDirection: 'row',
-    gap: 8,
+  {
+    id: 2,
+    question: "Apakah anak perlu menekan tombol?",
+    answer:
+      "Tidak perlu. Sistem ini berjalan otomatis (Pasif Monitoring). Alat akan terus membaca sensor tubuh anak dan AI akan memprediksi kondisi tanpa anak harus melakukan apa-apa.",
   },
-});
+  {
+    id: 3,
+    question: "Seberapa akurat prediksi AI?",
+    answer:
+      "AI dilatih untuk mengenali pola umum kecemasan atau tantrum. Namun, tetap disarankan untuk memeriksa kondisi fisik anak secara langsung jika peringatan muncul untuk memastikan kebenarannya.",
+  },
+  {
+    id: 4,
+    question: "Mengapa data BPM/Suhu strip (--)?",
+    answer:
+      "Pastikan perangkat wearable anak terhubung ke internet. Jika perangkat mati atau sinyal hilang, data sensor tidak dapat dikirim ke server untuk dianalisis.",
+  },
+  {
+    id: 5,
+    question: "Bagaimana cara mematikan alarm?",
+    answer:
+      "Alarm di aplikasi akan berhenti otomatis ketika sensor tubuh anak kembali stabil (rileks) dan AI memutuskan bahwa kondisi sudah 'AMAN'.",
+  },
+];
+
+export default function ExploreScreen() {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Fungsi untuk Buka/Tutup Accordion dengan Animasi
+  const toggleExpand = (id: number) => {
+    LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+    if (expandedId === id) {
+      setExpandedId(null); // Tutup jika diklik lagi
+    } else {
+      setExpandedId(id); // Buka yang baru
+    }
+  };
+
+  return (
+    <SafeAreaView className="flex-1 bg-slate-50">
+      <ScrollView className="px-5 pt-6 pb-20">
+        {/* Header Explore */}
+        <View className="mb-6">
+          <Text className="text-2xl font-bold text-slate-800">
+            Pusat Bantuan
+          </Text>
+          <Text className="text-slate-500 mt-1">
+            Temukan jawaban seputar penggunaan alat monitoring.
+          </Text>
+        </View>
+
+        {/* Banner Kontak Support (Opsional) */}
+        <View className="bg-sky-500 rounded-2xl p-5 mb-8 shadow-md flex-row items-center">
+          <View className="bg-white/20 p-3 rounded-full mr-4">
+            <MessageCircle color="white" size={24} />
+          </View>
+          <View className="flex-1">
+            <Text className="text-white font-bold text-lg">Butuh Bantuan?</Text>
+            <Text className="text-sky-100 text-xs">
+              Hubungi tim teknis kami jika alat bermasalah.
+            </Text>
+          </View>
+        </View>
+
+        {/* Section FAQ */}
+        <View className="flex-row items-center mb-4 gap-2">
+          <HelpCircle size={20} color="#64748b" />
+          <Text className="text-lg font-bold text-slate-700">
+            Sering Ditanyakan
+          </Text>
+        </View>
+
+        <View className="mb-24">
+          {faqData.map((item) => {
+            const isOpen = expandedId === item.id;
+
+            return (
+              <TouchableOpacity
+                key={item.id}
+                activeOpacity={0.8}
+                onPress={() => toggleExpand(item.id)}
+                className={`bg-white rounded-xl mb-3 border border-slate-100 shadow-sm overflow-hidden ${
+                  isOpen ? "border-sky-200" : ""
+                }`}
+              >
+                {/* Bagian Judul (Selalu Tampil) */}
+                <View className="p-4 flex-row justify-between items-center">
+                  <Text
+                    className={`flex-1 font-semibold text-base ${
+                      isOpen ? "text-sky-600" : "text-slate-700"
+                    }`}
+                  >
+                    {item.question}
+                  </Text>
+                  {isOpen ? (
+                    <ChevronUp size={20} color="#0ea5e9" />
+                  ) : (
+                    <ChevronDown size={20} color="#94a3b8" />
+                  )}
+                </View>
+
+                {/* Bagian Jawaban (Muncul saat dibuka) */}
+                {isOpen && (
+                  <View className="px-4 pb-4">
+                    <View className="h-[1px] bg-slate-100 w-full mb-3" />
+                    <Text className="text-slate-500 leading-6 text-sm">
+                      {item.answer}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
