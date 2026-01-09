@@ -24,43 +24,62 @@ const SetupScreen = () => {
   const [showWebView, setShowWebView] = useState(false);
 
   // --- 1. LOGIKA IZIN (WAJIB BUAT ANDROID) ---
-  const requestWifiPermissions = async () => {
+  const requestConnectionPermissions = async () => {
     if (Platform.OS === "android") {
       try {
-        // Android 13 (SDK 33) ke atas butuh NEARBY_WIFI_DEVICES
+        // 1. Untuk Android 13 ke atas (SDK 33+)
+        // Wajib pakai izin khusus: NEARBY_WIFI_DEVICES
         if (Platform.Version >= 33) {
-          const granted = await PermissionsAndroid.request(
+          const granted1 = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.NEARBY_WIFI_DEVICES,
             {
-              title: "Izin WiFi Dibutuhkan",
-              message: "Aplikasi butuh izin untuk menghubungkan ke alat IoT.",
+              title: "Izin Koneksi Perangkat",
+              message:
+                "Aplikasi butuh izin untuk memindai dan terhubung ke alat IoT di sekitar.",
               buttonNeutral: "Nanti",
               buttonNegative: "Tolak",
               buttonPositive: "Izinkan",
             }
           );
-          return granted === PermissionsAndroid.RESULTS.GRANTED;
-        }
-        // Android 12 ke bawah butuh FINE_LOCATION
-        else {
-          const granted = await PermissionsAndroid.request(
+          const granted2 = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
             {
-              title: "Izin Lokasi Dibutuhkan",
-              message: "Android mewajibkan izin lokasi untuk memindai WiFi.",
+              title: "Izin Lokasi Diperlukan",
+              message:
+                "Aplikasi ini membutuhkan akses lokasi untuk mendeteksi Wi-Fi ESP32.",
               buttonNeutral: "Nanti",
               buttonNegative: "Tolak",
               buttonPositive: "Izinkan",
             }
           );
-          return granted === PermissionsAndroid.RESULTS.GRANTED;
+          return (
+            granted1 === PermissionsAndroid.RESULTS.GRANTED &&
+            granted2 === PermissionsAndroid.RESULTS.GRANTED
+          );
+        }
+
+        // 2. Untuk Android 12 ke bawah
+        // Masih pakai cara lama: FINE_LOCATION
+        else {
+          const granted1 = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
+            {
+              title: "Izin Lokasi Diperlukan",
+              message:
+                "Android versi ini mewajibkan akses lokasi untuk mendeteksi sinyal WiFi alat.",
+              buttonNeutral: "Nanti",
+              buttonNegative: "Tolak",
+              buttonPositive: "Izinkan",
+            }
+          );
+          return granted1 === PermissionsAndroid.RESULTS.GRANTED;
         }
       } catch (err) {
-        console.warn(err);
+        console.warn("Error requesting permission:", err);
         return false;
       }
     }
-    return true; // iOS setup via Xcode Capabilities
+    return true; // iOS biasanya tidak butuh request runtime sekompleks Android
   };
 
   // --- 2. LOGIKA KONEKSI ---
@@ -68,7 +87,7 @@ const SetupScreen = () => {
     setIsConnecting(true);
 
     // 1️⃣ Cek izin dulu
-    const hasPermission = await requestWifiPermissions();
+    const hasPermission = await requestConnectionPermissions();
     if (!hasPermission) {
       setIsConnecting(false);
       Alert.alert(
@@ -88,9 +107,9 @@ const SetupScreen = () => {
       // 4️⃣ Konek ke ESP32 (OPEN NETWORK)
       await WifiManager.connectToProtectedSSID(
         ESP_SSID, // "ESP32-Medic"
-        "",        // password kosong (open AP)
-        false,     // bukan WEP
-        false      // joinOnce (tidak disimpan permanen)
+        "", // password kosong (open AP)
+        false, // bukan WEP
+        false // joinOnce (tidak disimpan permanen)
       );
 
       console.log("Berhasil konek ke ESP32!");
@@ -100,7 +119,6 @@ const SetupScreen = () => {
         setIsConnecting(false);
         setShowWebView(true);
       }, 2000);
-
     } catch (error) {
       setIsConnecting(false);
 
@@ -109,12 +127,11 @@ const SetupScreen = () => {
       Alert.alert(
         "Gagal Terhubung",
         "1. Pastikan alat menyala.\n" +
-        "2. Pastikan WiFi & GPS aktif.\n" +
-        "3. Jika muncul popup sistem, pilih 'Connect / Join'."
+          "2. Pastikan WiFi & GPS aktif.\n" +
+          "3. Jika muncul popup sistem, pilih 'Connect / Join'."
       );
     }
   };
-
 
   // --- 3. LOGIKA PUTUS KONEKSI (CLEANUP) ---
   const disconnectAndFinish = async () => {
@@ -132,7 +149,6 @@ const SetupScreen = () => {
       }, 100);
     }
   };
-
 
   const handleWebViewNavigation = (navState: { url: any }) => {
     console.log("URL:", navState.url);
