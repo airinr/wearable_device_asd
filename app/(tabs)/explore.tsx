@@ -92,7 +92,7 @@ export default function ExploreScreen() {
           <View className="flex-1">
             <Text className="text-white font-bold text-lg">Butuh Bantuan?</Text>
             <Text className="text-sky-100 text-xs">
-              Hubungi tim teknis kami jika alat bermasalah.
+              Hubungi tim teknis kami jika alat bermasalah (081299997777).
             </Text>
           </View>
         </View>
