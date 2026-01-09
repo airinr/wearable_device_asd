@@ -1,5 +1,5 @@
-import { useRouter } from "expo-router";
-import { CheckCircle2, Router, Wifi } from "lucide-react-native";
+import { useRouter, useFocusEffect } from "expo-router";
+import { CheckCircle2, Router as RouterIcon, Wifi } from "lucide-react-native";
 import React, { useState } from "react";
 import {
   ActivityIndicator,
@@ -13,6 +13,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { WebView } from "react-native-webview";
 import WifiManager from "react-native-wifi-reborn";
+import { useCallback } from "react";
 
 const ESP_SSID = "ESP32-Medic";
 const ESP_IP = "http://192.168.4.1";
@@ -66,7 +67,7 @@ const SetupScreen = () => {
   const connectToESP = async () => {
     setIsConnecting(true);
 
-    // Cek Izin Dulu
+    // 1️⃣ Cek izin dulu
     const hasPermission = await requestWifiPermissions();
     if (!hasPermission) {
       setIsConnecting(false);
@@ -78,45 +79,60 @@ const SetupScreen = () => {
     }
 
     try {
-      // Proses Konek
-      await WifiManager.connectToSSID(ESP_SSID);
+      // 2️⃣ DEBUG (boleh hapus nanti)
+      console.log("WifiManager keys:", Object.keys(WifiManager));
+
+      // 3️⃣ Paksa Android pakai WiFi (WAJIB Android 10+)
+      await WifiManager.forceWifiUsage(true);
+
+      // 4️⃣ Konek ke ESP32 (OPEN NETWORK)
+      await WifiManager.connectToProtectedSSID(
+        ESP_SSID, // "ESP32-Medic"
+        "",        // password kosong (open AP)
+        false,     // bukan WEP
+        false      // joinOnce (tidak disimpan permanen)
+      );
+
       console.log("Berhasil konek ke ESP32!");
 
-      // Jeda 2 detik agar IP assigned stabil sebelum buka WebView
+      // 5️⃣ Jeda biar DHCP stabil
       setTimeout(() => {
         setIsConnecting(false);
         setShowWebView(true);
       }, 2000);
+
     } catch (error) {
       setIsConnecting(false);
+
       console.log("Gagal konek:", error);
+
       Alert.alert(
         "Gagal Terhubung",
-        "1. Pastikan alat menyala.\n2. Pastikan GPS HP Aktif.\n3. Jika muncul popup sistem, pilih 'Connect/Join'."
+        "1. Pastikan alat menyala.\n" +
+        "2. Pastikan WiFi & GPS aktif.\n" +
+        "3. Jika muncul popup sistem, pilih 'Connect / Join'."
       );
     }
   };
 
+
   // --- 3. LOGIKA PUTUS KONEKSI (CLEANUP) ---
   const disconnectAndFinish = async () => {
     try {
-      // Putuskan koneksi agar HP kembali ke Internet (4G/WiFi Rumah)
       await WifiManager.disconnect();
-
-      // Khusus Android: Lepaskan 'binding' network
-      if (Platform.OS === "android") {
-        await WifiManager.forceWifiUsage(false);
-      }
-      console.log("Disconnected from ESP32");
-    } catch (error) {
-      console.log("Error disconnecting:", error);
+      await WifiManager.forceWifiUsage(false);
+    } catch (e) {
+      console.log(e);
     } finally {
-      // Reset State & Pindah Halaman
       setShowWebView(false);
-      // Ganti '/monitoring' sesuai route halaman dashboard kamu
-      router.replace("/monitoring");
+
+      // delay kecil biar context aman
+      setTimeout(() => {
+        router.replace("/(tabs)/monitoring");
+      }, 100);
     }
   };
+
 
   const handleWebViewNavigation = (navState: { url: any }) => {
     console.log("URL:", navState.url);
@@ -127,7 +143,7 @@ const SetupScreen = () => {
     return (
       <SafeAreaView className="flex-1 bg-white">
         {/* Header WebView */}
-        <View className="flex-row justify-between items-center px-5 py-4 border-b border-slate-100 bg-white shadow-sm z-10">
+        <View className="flex-row justify-between items-center px-5 py-4 border-b border-slate-100 bg-white z-10">
           <View>
             <Text className="text-lg font-bold text-slate-800">
               Konfigurasi WiFi
@@ -169,7 +185,7 @@ const SetupScreen = () => {
       {/* Ilustrasi Header */}
       <View className="items-center mb-10">
         <View className="bg-sky-100 w-24 h-24 rounded-full items-center justify-center mb-6 shadow-sm">
-          <Router size={48} color="#0ea5e9" />
+          <RouterIcon size={48} color="#0ea5e9" />
         </View>
         <Text className="text-2xl font-bold text-slate-800 text-center">
           Hubungkan Alat
