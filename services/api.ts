@@ -5,7 +5,8 @@ export interface SensorData {
   bpm: number;
   temp: number;
   status: string;
-  battery?: number;
+  wifi: number;
+  timestamp: string;
 }
 
 const API_URL = "https://backend.rutherweb.my.id/sensor/latest";
@@ -26,6 +27,8 @@ export const getSensorData = async (): Promise<SensorData> => {
       bpm: Number(json.bpm),
       temp: Number(json.temp),
       status: json.status,
+      wifi: Number(json.wifi),
+      timestamp: json.timestamp
     };
   } catch (error) {
     console.error("API Error:", error);

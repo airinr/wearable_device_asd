@@ -1,7 +1,5 @@
 import {
   AlertTriangle,
-  Battery,
-  BatteryCharging,
   Heart,
   Move,
   RefreshCcw,
@@ -32,8 +30,7 @@ interface SensorData {
   ay: number;
   az: number;
   timestamp: string;
-  battery?: number;
-  wifi?: number;
+  wifi: number;
 }
 
 export default function MonitoringScreen() {
@@ -54,7 +51,7 @@ export default function MonitoringScreen() {
         isAlertShown.current = true;
         Alert.alert(
           "⚠️ PERINGATAN AI!",
-          "Sistem mendeteksi tanda bahaya/kecemasan pada anak. Segera cek kondisi!",
+          "Sistem mendeteksi tanda kecemasan pada anak. Segera cek kondisi!",
           [{ text: "MENGERTI", onPress: () => {} }]
         );
       }
@@ -95,12 +92,9 @@ export default function MonitoringScreen() {
   const isMovingALot = motionStatus === "Banyak Bergerak"; // Untuk helper warna
 
   // Data Dummy
-  const batteryLevel = data?.battery ?? 100;
-  const rssi = data?.wifi ?? -50;
+  const rssi = data?.wifi ?? 0;
 
   // Warna Indikator
-  const batteryColor =
-    batteryLevel > 50 ? "#22c55e" : batteryLevel > 20 ? "#eab308" : "#ef4444";
   const signalColor =
     rssi > -70 ? "#22c55e" : rssi > -85 ? "#eab308" : "#ef4444";
   const signalText = rssi > -70 ? "Kuat" : rssi > -85 ? "Sedang" : "Lemah";
@@ -135,29 +129,6 @@ export default function MonitoringScreen() {
               }`}
             >
               Last Data: {data?.timestamp || "--:--:--"}
-            </Text>
-          </View>
-
-          {/* Baterai */}
-          <View
-            className={`px-3 py-1.5 rounded-full flex-row items-center space-x-2 ${
-              isPanic ? "bg-red-500" : "bg-white border border-slate-200"
-            }`}
-          >
-            {batteryLevel < 20 ? (
-              <BatteryCharging
-                size={18}
-                color={isPanic ? "white" : batteryColor}
-              />
-            ) : (
-              <Battery size={18} color={isPanic ? "white" : batteryColor} />
-            )}
-            <Text
-              className={`text-xs font-bold ml-1 ${
-                isPanic ? "text-white" : "text-slate-600"
-              }`}
-            >
-              {batteryLevel}%
             </Text>
           </View>
         </View>
